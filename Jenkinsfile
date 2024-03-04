@@ -1,12 +1,17 @@
 pipeline {
-    agent { docker { image 'maven:3.9.6-eclipse-temurin-17-alpine' } }
+    agent any
     stages {
         stage('build') {
-            environment {
-                  HOME="."
-            }
             steps {
-                sh 'mvn --version'
+                script {
+                   /* the return value gets caught and saved into the variable MY_CONTAINER */
+                   MY_CONTAINER = bat(script: '@docker run -d -i maven:3.9.6-eclipse-temurin-17-alpine', returnStdout: true).trim()
+                   echo "mycontainer_id is ${MY_CONTAINER}"
+                   /* mvn --version gets executed inside the Container */
+                   bat "docker exec ${MY_CONTAINER} mvn --version "
+                   /* the Container gets removed */
+                   bat "docker rm -f ${MY_CONTAINER}"
+                }
             }
         }
     }
